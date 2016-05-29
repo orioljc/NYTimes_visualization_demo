@@ -1,0 +1,60 @@
+<!doctype html>
+
+<title>Linking to Data Table</title>
+
+<meta charset="UTF-8">
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
+
+<link rel="stylesheet" type="text/css" href="oriol_nyt3/css/d3.parcoords.css">
+<link rel="stylesheet" type="text/css" href="oriol_nyt3/css/style.css">
+
+<script src="oriol_nyt3/js/d3.min.js"></script>
+<script src="oriol_nyt3/js/underscore.js"></script>
+
+<body>
+  <h1>Tensor Factorization: Statistically Recover Hidden Topics for New York Times </h1>
+  <p>
+   Click on the <b>Play</b>, <b>Pause</b> and <b>Stop</b> buttons to visualize an animation of differents steps of the algorithm.<br>
+   Click <b>Iterations up</b> and <b>Iterations down</b> to show the state of the algorithm that corresponds to different iterations.<br>
+   Change the frequency of the animation using the buttons <b>Period Up</b> and <b>Period Down</b>.<br>
+    Hover on each line to highlight it.
+ </p>
+
+<div style="text-align: center;">
+  <button onclick="start_button()">Play</button>
+  <button onclick="pause_button()">Pause</button>
+  <button onclick="stop_button()">Stop</button>
+  <br>
+  Number of iterations: <span id = "iterations"></span>
+  <button onclick="iter_up()">Iterations Up</button>
+  <button onclick="iter_down()">Iterations Down</button>  
+  <br>
+  Frequency of the animation: <span id = "frequency"></span>
+  <button onclick="period_up()">Period Up</button>
+  <button onclick="period_down()">Period Down</button>  
+</div>
+<br>
+<script src="oriol_nyt3/js/d3.parcoords.HoneyBee.js"></script>
+
+<div id="nytimes" class="parcoords" style="width:90%; height:500px"></div>
+
+<script type = "text/javascript" src = "oriol_nyt3/js/visualization.js"></script>
+
+<p>This example demonstrates the recovery of topics from New York Times data obtained from the <a target = "_blank"href="https://archive.ics.uci.edu/ml/datasets/Bag+of+Words" title="New York Times dataset">New York Times dataset</a>.<br>
+  It contains 102,660 distinct words, 300,000 documents,  and 100,000,000 words in total. Individual document names (i.e. an identifier for each docID) are not provided for copyright reasons.</p>
+
+  <p>
+    The graphic and the table show the estimated probabilities of each word belonging to each topic as recovered by the tensor algorithm (only the top words for the top topics are shown). The data shown corresponds to the iteration of the algorithm indicated in <b>Number of iterations: xxx</b>.<p>
+
+    <p>Our algorithm recovered topics such as <span class="economy">Economy</span>, <span class="education">Education</span>, <span class="sports">Sports</span>, <span class="online">Online Social Media</span> and <span class="crime">Crime Reports</span>.
+  </p>
+
+<div id="acknowledgements">
+  <h2> Acknowledgements </h2>
+  <p>Topic modeling code: <i>Furong Huang & Forough Arabshahi</i></p>
+  <p>Visualization: <i>Oriol Julià Carrillo</i></p>
+  <br>
+</div>
+
+
+</body>

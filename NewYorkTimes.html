@@ -1,0 +1,279 @@
+<!doctype html>
+<title>Linking to Data Table</title>
+<link rel="stylesheet" type="text/css" href="oriol_nyt/css/d3.parcoords.css">
+<link rel="stylesheet" type="text/css" href="oriol_nyt/css/style.css">
+<style>
+body, html { margin: 0; padding: 10px; width: 100%; height: 100%; 
+}
+p {padding-left: 10%; padding-right: 10%;}
+.economy{
+  color: green;
+  font-weight: bold;
+}
+.crime{
+  color: red;
+  font-weight: bold;
+}
+.sports{
+  color: black;
+  font-weight: bold;
+}
+.online{
+  color: purple;
+  font-weight: bold;
+}
+.education{
+  color: blue;
+  font-weight: bold;
+}
+/* parcoords */
+#nytimes { position: relative; bottom: 4px; height: 400px; width: 90%; padding: 8px 1% 0; border-top: 1px solid #d0d0d0; }
+#nytimes text { font-size: 10px; }
+/* data table styles */
+#grid { position: relative; top: 20px; width: 100%; height: 200px; overflow: auto; border-top: 1px solid #d0d0d0; }
+.row, .header { clear: left; font-size: 10px; line-height: 16px; height: 16px; width: 2000px; padding: 0 16px;}
+.row:nth-child(odd) { background: rgba(0,0,0,0.05); }
+.header { font-weight: bold; }
+.cell { float: left; overflow: hidden; white-space: nowrap; width: 50px; height: 18px; }
+.col-0 { width: 180px; }
+</style>
+<script src="oriol_nyt/js/d3.min.js"></script>
+<script src="oriol_nyt/js/d3.parcoords.js"></script>
+<script src="oriol_nyt/js/divgrid.js"></script>
+<script src="oriol_nyt/js/underscore.js"></script>
+<script src="oriol_nyt/js/scatterplot.js"></script>
+
+<body>
+
+<div style="text-align: center;">
+<h1>Tensor Factorization: Statistically Recover Hidden Topics for New York Times </h1>
+</div id="text1">
+       <p>
+       Click on the <b>Play</b>, <b>Pause</b> and <b>Stop</b> buttons to visualize an animation of differents steps of the algorithm.<br>
+       Click <b>Iterations up</b> and <b>Iterations down</b> to show the state of the algorithm that corresponds to different iterations.<br>
+       Change the frequency of the animation using the buttons <b>Period Up</b> and <b>Period Down</b>.<br>
+       Move your mouse to one of the rows of the table beneath the graphic to highlight the visualization of that row.
+       </p>
+
+<div style="text-align: center;">
+  <button onclick="start_button()">Play</button>
+  <button onclick="pause_button()">Pause</button>
+  <button onclick="stop_button()">Stop</button>
+  <br>
+  Number of iterations: <span id = "iterations"></span>
+  <button onclick="iter_up()">Iterations Up</button>
+  <button onclick="iter_down()">Iterations Down</button>  
+  <br>
+  Frequency of the animation: <span id = "frequency"></span>
+  <button onclick="period_up()">Period Up</button>
+  <button onclick="period_down()">Period Down</button>  
+<!--
+  <br>
+  Speed of the animation: <span id = "speed"></span>
+  <button onclick="iter_up()">Interations Up</button>
+  <button onclick="iter_down()">Iterations Down</button>
+-->
+</div>
+<br>
+
+<div id="nytimes" class="parcoords"></div>
+<div id="grid"></div>
+
+  <br><br>
+  
+  <p>This example demonstrates the recovery of topics from New York Times data obtained in the the following dataset: <a target = "_blank"href="https://archive.ics.uci.edu/ml/datasets/Bag+of+Words" title="New York Times dataset">New York Times bag of words</a><br>
+  It contains 102,660 distinct words, 300,000 documents,  and 100,000,000 words in total. Individual document names (i.e. an identifier for each docID) are not provided for copyright reasons.</p>
+
+      <p>
+      The graphic and the table show the estimated probabilities of each word belonging to each topic as recovered by the tensor algorithm (only the top words for the top topics are shown). The data shown corresponds to the iteration of the algorithm indicated in <b>Number of iterations: xxx</b>. The graphic shows the same data than the table.<p>
+
+      <p>Our algorithm recovered topics such as <span class="economy">Economy</span>, <span class="education">Education</span>, <span class="sports">Sports</span>, <span class="online">Online Social Media</span> and <span class="crime">Crime Reports</span>.
+      </p>
+
+
+<script id="brushing">
+
+  var iter_vec = ["100", "200", "300", "400", "500", "600", "700", "800", "900", "1000", "2000", "3000", "4000", "5000", "6000", "7000", "8000", "9000", "10000"];
+  var csv_files = new Array(iter_vec.length);
+  for(i=0; i<iter_vec.length; i++){
+    csv_files[i] = "oriol_nyt/data/csv_files/it".concat(iter_vec[i]);
+    csv_files[i] = csv_files[i].concat(".csv");
+  }
+
+  var iter = 0;
+  document.getElementById("iterations").innerHTML = iter_vec[iter];
+  
+  var freq = 50; // frequency of data change (miliseconds)
+  document.getElementById("frequency").innerHTML = freq;
+
+  //document.getElementById("speed").innerHTML = freq;
+  var parcoords;
+  load_data(true);
+
+  //var setInterval_id = setInterval(reload_data, freq);
+
+  function start_button(){
+    if( iter >= csv_files.length-1){
+      iter = 0;
+    }
+    setInterval_id = setInterval(reload_data, freq);
+  }
+  function pause_button(){
+      clearInterval(setInterval_id);
+  }
+  function stop_button(){
+      clearInterval(setInterval_id);
+      iter = 0;
+      document.getElementById("iterations").innerHTML = iter_vec[iter];
+      reload_data(true);
+  }
+
+  function iter_up(){
+    iter++;
+    if( iter < iter_vec.length ){
+      load_data(false);
+    }else{
+      iter = iter_vec.length-1;
+    }
+  }
+  function iter_down(){
+    iter--;
+    if( iter >= 0 ){
+      load_data(false);
+    }else{
+      iter = 0;
+    }
+  }
+
+  function period_up(){
+    freq += 20;
+    document.getElementById("frequency").innerHTML = freq;
+  }
+  function period_down(){
+    if( freq - 20 > 0 ){
+      freq -= 20;
+      document.getElementById("frequency").innerHTML = freq;
+    }
+  }
+
+  function reload_data(stop_button){
+    if( stop_button === undefined )
+      stop_button = false;
+    // Case when we have already seen all the files
+    if( iter >= csv_files.length ){
+      clearInterval(setInterval_id);
+    }else{
+      //document.getElementById("nytimes").innerHTML = "";
+      load_data(false);
+    }
+    if( stop_button !== true )
+      iter = iter+1;
+  }
+var prova;
+ function load_data(first){
+
+  //console.log(csv_files[iter])
+
+  document.getElementById("iterations").innerHTML = iter_vec[iter];
+
+  parcoords = d3.parcoords()("#nytimes");
+  var transparency = d3.scale.pow()
+    .exponent(0.15)
+    .range([1,0.12]);
+
+  var colorList = ["red","green","blue","purple","black", "white"];
+
+  var scatter = scatterplot()
+    .key(function(d) { return d.name })
+    .width(document.body.clientHeight - 350)
+    .height(document.body.clientHeight - 350);
+
+// load csv file and create the chart
+  d3.csv(csv_files[iter], function(data) {
+  var colorMap = {};
+  _(data).chain()
+  .pluck('group')
+  .uniq()
+  .each(function(d,i) {
+    colorMap[d] = colorList.length > i ? colorList[i] : "black";
+  });
+
+  var color = function(d) { return colorMap[d.group]; };
+  transparency.domain([1,data.length]);
+
+    
+  if( first == true ) {
+    parcoords
+      .data(data)
+      .alpha(0.5)
+      .color(color)
+      .margin({ top: 24, left: 80, bottom: 12, right: 0 })
+      .mode("queue")
+      .render()
+      //.interactive()
+      //.reorderable()
+      .axisDots(size = 1) 
+      //.dimensions(['', 'group', 'topic 1', 'topic 2', 'topic 3', 'topic 4', 'topic 5', 'topic 6', 'topic 7', 'topic 8', 'topic 9', 'topic 10', 'topic 11', 'topic 12', 'topic 13', 'topic 14', 'topic 15', 'topic 16', 'topic 17', 'topic 18', 'topic 19', 'topic 20'])
+
+      .brushMode("1D-axes");  // enable brushing
+  }else{
+    parcoords
+      .data(data)
+      .alpha(0.5)
+      .color(color)
+      .margin({ top: 24, left: 80, bottom: 12, right: 0 })
+      .mode("queue")
+      .render()
+      .interactive()
+      //.reorderable()
+      .axisDots(size = 1)  
+      .removeAxes()  
+
+      .brushMode("1D-axes");  // enable brushing
+  }
+
+    scatter.data(data)("#scatter");
+
+    // create data table, row hover highlighting
+    var grid = d3.divgrid();
+    d3.select("#grid")
+      .datum(data.slice(0,50))
+      .call(grid)
+      .selectAll(".row")
+      .on({
+        "mouseover": function(d) { prova = d; parcoords.highlight([d]) },
+        "mouseout": parcoords.unhighlight
+      });
+
+    // update data table on brush event
+    parcoords.on("brush", function(d) {
+      parcoords.alpha(transparency(d.length));
+      scatter.show(d);
+      d3.select("#grid")
+        .datum(d.slice(0,30))
+        .call(grid)
+        .selectAll(".row")
+        .on({
+          "mouseover": function(d) { parcoords.highlight([d]) },
+          "mouseout": parcoords.unhighlight
+        });
+    });
+
+    window.onresize = function() {
+      parcoords.width(document.body.clientWidth);
+      parcoords.resize();
+
+      scatter
+        .width(document.body.clientHeight - 350)
+        .height(document.body.clientHeight - 350)
+        .update();
+
+    };
+  });
+
+}
+
+</script>
+
+
+</body>
